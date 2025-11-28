@@ -2,6 +2,7 @@ import express from 'express'
 
 import { z } from 'zod'
 import { PrismaClient } from "@prisma/client"
+import { hash } from 'bcryptjs'
 
 const app = express();
 const PORT = 3333;
@@ -24,7 +25,14 @@ app.post('/users', async (req, res) => {
 
         const userData = userSchema.parse(req.body)
 
-        const newUser = await prisma.user.create({ data: userData })
+        let passwordHash = await hash(userData.password, 6);
+
+        const newUser = await prisma.user.create({ 
+            data: {
+                ...userData,
+                password: passwordHash 
+            }
+         })
         
         return res.status(201).json(newUser)
     } catch(err) {
