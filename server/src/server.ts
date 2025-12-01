@@ -1,5 +1,4 @@
 import express from 'express'
-
 import { z, ZodError } from 'zod'
 import { PrismaClient } from "@prisma/client"
 import { hash } from 'bcryptjs'
@@ -17,7 +16,52 @@ const utf8Length = (s: string) => textEncoder.encode(s).length;
 app.use(express.json());
 
 app.get('/', (req, res) => {
-    return res.json({message: 'hello world. servidor rodando'})
+    return res.json({ message: 'hello world. servidor rodando' })
+})
+
+app.get('/users', (req, res) => {
+    try {
+        const querySchema = z.object({
+            page: z.coerce.number()
+                .min(1)
+                .default(1),
+
+            perPage: z.coerce.number()
+                .min(1)
+                .max(100)
+                .default(10),
+
+            orderBy: z.enum(['createdAt', 'name', 'email', 'updatedAt'])
+                .default('createdAt'),
+
+            orderDirection: z.enum(['asc', 'desc'])
+                .default('desc'),
+
+            search: z.string()
+                .trim()
+                .max(100)
+                .transform(value => value === "" ? undefined : value)
+                .optional(),
+
+            role: z.string()
+                .trim()
+                .optional(),
+        })
+
+        const queryParams = querySchema.parse(req.query);
+
+    } catch (err) {
+        if (err instanceof ZodError) {
+            return res.status(400).json({
+                error: 'ValidationError',
+                issues: err.issues.map(i => ({
+                    path: i.path.join('.'),
+                    message: i.message,
+                    code: i.code
+                }))
+            })
+        }
+    }
 })
 
 app.post('/users', async (req, res) => {
@@ -25,18 +69,18 @@ app.post('/users', async (req, res) => {
         const userSchema = z.strictObject({
             name: z.string().trim(),
             email: z.email().toLowerCase().trim(),
-            password: z.string().min(8, 'Senha deve ter pelo menos 8 caracteres').refine((val) => utf8Length(val) <= 72, {message:'Senha não corresponde com o tamanho permitido'})
+            password: z.string().min(8, 'Senha deve ter pelo menos 8 caracteres').refine((val) => utf8Length(val) <= 72, { message: 'Senha não corresponde com o tamanho permitido' })
         })
 
         const { name, email, password } = userSchema.parse(req.body)
 
         const passwordHash = await hash(password, SALT_ROUNDS);
 
-        const newUser = await prisma.user.create({ 
+        const newUser = await prisma.user.create({
             data: {
                 name,
                 email,
-                password: passwordHash 
+                password: passwordHash
             },
             select: {
                 id: true,
@@ -47,10 +91,10 @@ app.post('/users', async (req, res) => {
                 updatedAt: true,
                 role: true,
             }
-         })
+        })
 
         return res.status(201).json(newUser)
-    } catch(err) {
+    } catch (err) {
         if (err instanceof ZodError) {
             return res.status(400).json({
                 error: 'ValidationError',
@@ -74,6 +118,6 @@ app.post('/users', async (req, res) => {
         console.error(err)
         return res.status(500).json({ error: 'InternalServerError' })
     }
-})  
+})
 
 app.listen(PORT, () => console.log(`server running on port ${PORT}`))
