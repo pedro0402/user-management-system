@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
     return res.json({ message: 'hello world. servidor rodando' })
 })
 
-app.get('/users', (req, res) => {
+app.get('/users', async (req, res) => {
     try {
         const querySchema = z.object({
             page: z.coerce.number()
@@ -50,6 +50,53 @@ app.get('/users', (req, res) => {
 
         const queryParams = querySchema.parse(req.query);
 
+        const { page, perPage, orderBy,orderDirection, search, role } = queryParams;
+
+        const skip = (page - 1) * perPage;
+        const take = perPage;
+
+        const where: Prisma.UserWhereInput = {}
+        if (role) {
+            where.role = role
+        }
+        if (search) {
+            where.OR = [
+                { name: { contains: search, mode:'insensitive' } },
+                { email: { contains: search, mode:'insensitive' } },
+            ]
+        }
+
+        const orderClause: Prisma.UserOrderByWithRelationInput = { [orderBy]: orderDirection }
+
+        const total = await prisma.user.count({ where })
+
+        const items = await prisma.user.findMany({
+           where,
+           orderBy: orderClause,
+           skip,
+           take,
+           select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+            role: true,
+            createdAt: true,
+            updatedAt: true,
+           },
+        })
+
+        const totalPages = Math.ceil(total / perPage)
+        const meta = {
+            total,
+            page,
+            perPage,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1,
+        }
+
+        return res.status(200).json({ items, meta })
     } catch (err) {
         if (err instanceof ZodError) {
             return res.status(400).json({
@@ -61,6 +108,8 @@ app.get('/users', (req, res) => {
                 }))
             })
         }
+        console.error(err)
+        return res.status(500).json({ error: 'InternalServerError' })
     }
 })
 
