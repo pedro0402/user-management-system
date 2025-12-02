@@ -3,6 +3,7 @@ import { z, ZodError } from 'zod'
 import { PrismaClient } from "@prisma/client"
 import { hash } from 'bcryptjs'
 import { Prisma } from '@prisma/client';
+import { error } from 'console';
 
 const app = express();
 const PORT = 3333;
@@ -46,7 +47,7 @@ app.get('/users', async (req, res) => {
 
         const queryParams = querySchema.parse(req.query);
 
-        const { page, perPage, orderBy,orderDirection, search, role } = queryParams;
+        const { page, perPage, orderBy, orderDirection, search, role } = queryParams;
 
         const skip = (page - 1) * perPage;
         const take = perPage;
@@ -57,8 +58,8 @@ app.get('/users', async (req, res) => {
         }
         if (search) {
             where.OR = [
-                { name: { contains: search, mode:'insensitive' } },
-                { email: { contains: search, mode:'insensitive' } },
+                { name: { contains: search, mode: 'insensitive' } },
+                { email: { contains: search, mode: 'insensitive' } },
             ]
         }
 
@@ -67,19 +68,19 @@ app.get('/users', async (req, res) => {
         const total = await prisma.user.count({ where })
 
         const items = await prisma.user.findMany({
-           where,
-           orderBy: orderClause,
-           skip,
-           take,
-           select: {
-            id: true,
-            name: true,
-            email: true,
-            avatarUrl: true,
-            role: true,
-            createdAt: true,
-            updatedAt: true,
-           },
+            where,
+            orderBy: orderClause,
+            skip,
+            take,
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true,
+                role: true,
+                createdAt: true,
+                updatedAt: true,
+            },
         })
 
         const totalPages = Math.ceil(total / perPage)
@@ -104,6 +105,52 @@ app.get('/users', async (req, res) => {
                 }))
             })
         }
+        console.error(err)
+        return res.status(500).json({ error: 'InternalServerError' })
+    }
+})
+
+app.get('/users/:id', async (req, res) => {
+    try {
+        const paramSchema = z.object({
+            id: z.uuid()
+        });
+
+        const { id } = paramSchema.parse(req.params);
+
+        const user = await prisma.user.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true,
+                role: true,
+                createdAt: true,
+                updatedAt: true,
+            }
+        })
+
+        if (!user) {
+            return res.status(404).json({
+                error: 'NotFound',
+                message: 'Usuário não encontrado'
+            })
+        };
+
+        return res.status(200).json(user)
+    } catch (err) {
+        if (err instanceof ZodError) {
+            return res.status(400).json({
+                error: 'ValidationError',
+                issues: err.issues.map(i => ({
+                    path: i.path.join('.'),
+                    message: i.message,
+                    code: i.code
+                }))
+            })
+        }
+
         console.error(err)
         return res.status(500).json({ error: 'InternalServerError' })
     }
