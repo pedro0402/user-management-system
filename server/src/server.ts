@@ -15,10 +15,6 @@ const utf8Length = (s: string) => textEncoder.encode(s).length;
 
 app.use(express.json());
 
-app.get('/', (req, res) => {
-    return res.json({ message: 'hello world. servidor rodando' })
-})
-
 app.get('/users', async (req, res) => {
     try {
         const querySchema = z.object({
