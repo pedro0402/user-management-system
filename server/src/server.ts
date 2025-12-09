@@ -1,5 +1,5 @@
 import express from 'express'
-import { z, ZodError } from 'zod'
+import { email, z, ZodError } from 'zod'
 import { PrismaClient } from "@prisma/client"
 import { hash } from 'bcryptjs'
 import { Prisma } from '@prisma/client';
@@ -153,6 +153,84 @@ app.get('/users/:id', async (req, res) => {
 
         console.error(err)
         return res.status(500).json({ error: 'InternalServerError' })
+    }
+})
+
+app.patch('/users/:id', async (req, res) => {
+    try {
+        const paramSchema = z.object({
+            id: z.uuid()
+        })
+
+        const { id } = paramSchema.parse(req.params);
+
+        const userSchema = z.object({
+            name: z.string().trim().optional(),
+            email: z.email().toLowerCase().trim().optional(),
+            password: z.string().min(8, 'Senha deve ter pelo menos 8 caracteres')
+                .refine((val) => utf8Length(val) <= 72, {
+                    message: 'Senha não corresponde com o tamanho permitido'
+                }).optional()
+        })
+
+        const data = userSchema.parse(req.body);
+
+        const existingUser = await prisma.user.findUnique({
+            where: { id },
+        })
+
+        if (!existingUser) {
+            return res.status(404).json({ message: "Usuário não encontrado" })
+        }
+
+        if (data.password) {
+            data.password = await hash(data.password, SALT_ROUNDS);
+        }
+
+        if (Object.keys(data).length === 0) {
+            return res.status(400).json({ error: 'ValidationError', message: 'Nenhum campo para atualizar' })
+        }
+
+        const updated = await prisma.user.update({
+            where: { id },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true,
+                createdAt: true,
+                updatedAt: true,
+                role: true,
+            },
+            data,
+        })
+
+        return res.status(200).json(updated)
+    }
+    catch (err) {
+        if (err instanceof ZodError) {
+            return res.status(400).json({
+                error: 'ValidationError',
+                issues: err.issues.map(i => ({
+                    path: i.path.join('.'),
+                    message: i.message,
+                    code: i.code
+                }))
+            })
+        }
+
+        if (err instanceof Prisma.PrismaClientKnownRequestError) {
+            if (err.code === 'P2002') {
+                return res.status(409).json({
+                    conflict: 'Conflict',
+                    message: 'E-mail já existente'
+                })
+            }
+        }
+
+        console.error(err);
+        return res.status(500).json({ error: 'InternalServerError' })
+
     }
 })
 
