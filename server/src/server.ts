@@ -290,4 +290,43 @@ app.post('/users', async (req, res) => {
     }
 })
 
+app.delete('/users/:id', async (req, res) => {
+    try {
+        const userSchema = z.object({
+            id: z.uuid(),
+        })
+
+        const { id } = userSchema.parse(req.params);
+
+        await prisma.user.delete({
+            where: { id },
+        })
+
+        return res.status(204).send();
+    } catch (err) {
+        if (err instanceof ZodError) {
+            return res.status(400).json({
+                error: 'ValidationError',
+                issues: err.issues.map(i => ({
+                    path: i.path.join('.'),
+                    message: i.message,
+                    code: i.code
+                }))
+            })
+        }
+
+        if (err instanceof Prisma.PrismaClientKnownRequestError &&
+            err.code === 'P2025'
+        ) {
+            return res.status(404).json({ 
+                error: 'NotFound',
+                message: 'Usuário não encontrado'
+             })
+        }
+
+        console.error(err)
+        return res.status(500).json({ error: 'InternalServerError' })
+    }
+})
+
 app.listen(PORT, () => console.log(`server running on port ${PORT}`))
