@@ -30,5 +30,5 @@ export const postLogin = async (req: Request, res: Response) => {
 
     const { password: _, ...userPublic } = user;
 
-    return res.json({ user: userPublic, token })
+    return res.status(200).json({ user: userPublic, token })
 }
