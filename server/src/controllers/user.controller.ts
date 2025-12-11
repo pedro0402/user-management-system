@@ -128,11 +128,7 @@ export const updateUser = async (req: Request, res: Response) => {
     if (data.password) {
         data.password = await hashPassword(data.password)
     }
-
-    if (Object.keys(data).length === 0) {
-        throw new ValidationException("Nenhum campo para atualizar.")
-    }
-
+    
     const updated = await prisma.user.update({
         where: { id },
         select: {
