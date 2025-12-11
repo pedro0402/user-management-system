@@ -16,9 +16,9 @@ export const postLogin = async (req: Request, res: Response) => {
         throw new UnauthorizedException('Credenciais inválidas')
     }
 
-    const comparedPassword = await compare(password, user.password);
+    const isPasswordValid = await compare(password, user.password);
 
-    if (!comparedPassword) {
+    if (!isPasswordValid) {
         throw new UnauthorizedException('Credenciais inválidas')
     }
 
