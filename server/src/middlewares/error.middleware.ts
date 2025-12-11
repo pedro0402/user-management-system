@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { Prisma } from '@prisma/client';
 import { NotFoundException } from "../exceptions/NotFoundException";
 import { ValidationException } from "../exceptions/ValidationException";
+import { UnauthorizedException } from "../exceptions/UnauthorizedException";
 
 export function errorMiddleware(err: unknown, req: Request, res: Response, next: NextFunction) {
     if (err instanceof ZodError) {
@@ -39,6 +40,13 @@ export function errorMiddleware(err: unknown, req: Request, res: Response, next:
     }
 
     if (err instanceof NotFoundException) {
+        return res.status(err.status).json({
+            error: err.name,
+            message: err.message
+        })
+    }
+
+    if (err instanceof UnauthorizedException) {
         return res.status(err.status).json({
             error: err.name,
             message: err.message
