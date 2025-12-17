@@ -1,5 +1,6 @@
 import request from 'supertest'
 import { app } from '../app'
+import { email } from 'zod';
 
 describe("autenticacao em rotas protegidas", () => {
     let token: string = "";
@@ -46,5 +47,51 @@ describe('POST /auth/login', () => {
             })
         expect(res.status).toBe(200);
         expect(res.body).toHaveProperty('token');
+    })
+})
+
+describe('Permissão de acesso ao GET /users', () => {
+    let adminToken: string = "";
+    let userToken: string = "";
+    beforeAll(async () => {
+        const adminRes = await request(app)
+            .post('/auth/login')
+            .send({
+                email: 'adminteste@teste.com',
+                password: '12345678'
+            })
+        adminToken = adminRes.body.token;
+
+        const userRes = await request(app)
+            .post('/auth/login')
+            .send({
+                email: 'pedro@teste.com',
+                password: 'ph040204'
+            })
+        userToken = userRes.body.token;
+        expect(adminToken).toBeTruthy();
+        expect(userToken).toBeTruthy();
+    });
+
+    it('deve PERMITIR ao ADMIN listar todos os usuários', async () => {
+        const res = await request(app)
+            .get('/users')
+            .set('Authorization', 'Bearer ' + adminToken);
+        expect(res.status).toBe(200);
+        expect(Array.isArray(res.body.items)).toBe(true)
+    })
+
+    it('deve NEGAR ao USER comum listar todos os usuários', async () => {
+        const res = await request(app)
+            .get('/users')
+            .set('Authorization', 'Bearer ' + userToken);
+        expect(res.status).toBe(403)
+        expect(res.body).toHaveProperty('error')
+    })
+
+    it('deve NEGAR acesso sem token', async () => {
+        const res = await request(app)
+            .get('/users');
+        expect(res.status).toBe(401);
     })
 })
