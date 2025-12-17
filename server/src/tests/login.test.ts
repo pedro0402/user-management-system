@@ -24,3 +24,27 @@ describe("autenticacao em rotas protegidas", () => {
         expect(Array.isArray(res.body.items)).toBe(true)
     })
 })
+
+describe('POST /auth/login', () => {
+    it('deve retornar 401 quando as credencias forem inválidas', async () => {
+        const res = await request(app)
+            .post('/auth/login')
+            .send({
+                email: 'emailinvalido@teste.com',
+                password: '12345678'
+            })
+        expect(res.status).toBe(401);
+        expect(res.body).toHaveProperty('error')
+    })
+
+    it('deve retornar token ao logar com sucesso ', async () => {
+        const res = await request(app)
+            .post('/auth/login')
+            .send({
+                email: 'adminteste@teste.com',
+                password: '12345678'
+            })
+        expect(res.status).toBe(200);
+        expect(res.body).toHaveProperty('token');
+    })
+})
