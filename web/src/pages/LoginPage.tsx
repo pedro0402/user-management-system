@@ -23,10 +23,12 @@ export function LoginPage() {
         setLoading(false);
     }
     return (
-        <div>
-            <h2>Login</h2>
-            <LoginForm error={error} onSubmit={handleLogin} />
-            {loading && <span>Carregando...</span>}
+        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+            <div className="w-full max-w-sm p-6">
+                <h2 className="text-center text-2xl font-bold mb-6 ">Login</h2>
+                <LoginForm error={error} onSubmit={handleLogin} />
+                {loading && <span>Carregando...</span>}
+            </div>
         </div>
     );
 
