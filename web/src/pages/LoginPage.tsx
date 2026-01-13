@@ -15,7 +15,7 @@ export function LoginPage() {
                 localStorage.setItem('token', data.token);
                 window.location.href = '/'
             } else {
-                setError(data.error || 'email ou senha inválidos');
+                setError(data.message);
             }
         } catch (e) {
             setError('erro ao se conectar com o servidor')
