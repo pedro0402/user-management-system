@@ -13,6 +13,7 @@ export function LoginPage() {
             const data = await login(email, password);
             if (data.token) {
                 localStorage.setItem('token', data.token);
+                localStorage.setItem('email', data.user.email)
                 window.location.href = '/'
             } else {
                 setError(data.message);
