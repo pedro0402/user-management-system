@@ -14,6 +14,7 @@ export function LoginPage() {
             if (data.token) {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('email', data.user.email)
+                localStorage.setItem('role', data.user.role)
                 window.location.href = '/'
             } else {
                 setError(data.message);
