@@ -56,6 +56,13 @@ export function DashboardPage() {
                             <div className="text-sm text-gray-600">Gerenciar usuários do sistema (admin)</div>
                         </button>
                     )}
+
+                    {!isAdmin && (
+                        <p className="mt-6 text-sm text-gray-600">
+                            Sua conta não tem acesso adminstrativo
+                        </p>
+                    )
+                    }
                 </div>
             </main>
         </div>
