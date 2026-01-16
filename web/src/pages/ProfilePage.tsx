@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import { sleep, validateName } from "../services/utils";
+import { sleep, validateName, validateUrl } from "../services/utils";
 
 type JwtPayload = {
     id: string;
@@ -40,6 +40,7 @@ export function ProfilePage() {
     const [user, setUser] = useState<User | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [nameError, setNameError] = useState<string | null>(null);
+    const [urlError, setUrlError] = useState<string | null>(null);
 
     // Campos editáveis
     const [name, setName] = useState("");
@@ -102,8 +103,12 @@ export function ProfilePage() {
         setSuccess(null);
 
         const error = validateName(name);
-        if (error) {
-            setNameError(error);
+        const urlError = validateUrl(avatarUrl);
+
+        setNameError(error);
+        setUrlError(urlError);
+
+        if (error || urlError) {
             return;
         }
 
@@ -260,13 +265,17 @@ export function ProfilePage() {
                         </label>
 
                         <label className="grid gap-1">
-                            <span className="text-sm font-medium text-gray-700">Avatar URL</span>
+                            <span className="text-sm font-medium text-gray-700">Avatar URL (opcional)</span>
                             <input
                                 className="rounded border px-3 py-2 text-sm"
                                 value={avatarUrl}
-                                onChange={(e) => setAvatarUrl(e.target.value)}
+                                onChange={(e) => { setAvatarUrl(e.target.value); if (urlError) setUrlError(null) }}
+                                onBlur={(e) => setUrlError(validateUrl(e.target.value))}
                                 placeholder="https://..."
                             />
+                            {urlError && (
+                                <p className="text-sm text-red-600 mt-1">{urlError}</p>
+                            )}
                         </label>
 
                         <label className="grid gap-1">
