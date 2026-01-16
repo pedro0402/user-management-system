@@ -40,6 +40,7 @@ export const patchUserSchema = z.object({
             message: 'Senha não corresponde com o tamanho permitido'
         }).optional(),
     avatarUrl: z.url().nullable().optional(),
+    role: z.enum(['admin', 'user']).optional(),
 }).refine(data => Object.keys(data).length > 0, {
     message: "Nenhum campo para atualizar."
 })
@@ -48,5 +49,6 @@ export const postUserSchema = z.strictObject({
     name: z.string().trim(),
     email: z.email().toLowerCase().trim(),
     role: z.string().trim().toLowerCase().optional(),
-    password: z.string().min(8, 'Senha deve ter pelo menos 8 caracteres').refine((val) => utf8Length(val) <= 72, { message: 'Senha não corresponde com o tamanho permitido' })
+    password: z.string().min(8, 'Senha deve ter pelo menos 8 caracteres').refine((val) => utf8Length(val) <= 72, { message: 'Senha não corresponde com o tamanho permitido' }),
+    avatarUrl: z.url().nullable().optional(),
 })

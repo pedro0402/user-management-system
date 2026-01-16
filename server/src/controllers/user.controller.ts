@@ -87,7 +87,7 @@ export const getUserById = async (req: Request, res: Response) => {
 }
 
 export const createUser = async (req: Request, res: Response) => {
-    const { name, email, password, role } = schema.postUserSchema.parse(req.body)
+    const { name, email, password, role, avatarUrl } = schema.postUserSchema.parse(req.body)
 
     const passwordHash = await hashPassword(password);
 
@@ -96,7 +96,8 @@ export const createUser = async (req: Request, res: Response) => {
             name,
             email,
             password: passwordHash,
-            role
+            role,
+            avatarUrl,
         },
         select: {
             id: true,

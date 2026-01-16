@@ -4,6 +4,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import PrivateRoute from './components/PrivateRoute';
 import PublicRoute from './components/PublicRoute';
 import { ProfilePage } from './pages/ProfilePage';
+import { UsersPage } from './pages/UsersPage';
 
 
 function App() {
@@ -23,6 +24,10 @@ function App() {
         <Route path='/profile' element={
           <PrivateRoute>
             <ProfilePage />
+          </PrivateRoute>} />
+        <Route path='/users' element={
+          <PrivateRoute>
+            <UsersPage />
           </PrivateRoute>} />
       </Routes>
     </Router>
