@@ -38,7 +38,8 @@ export const patchUserSchema = z.object({
     password: z.string().min(8, 'Senha deve ter pelo menos 8 caracteres')
         .refine((val) => utf8Length(val) <= 72, {
             message: 'Senha não corresponde com o tamanho permitido'
-        }).optional()
+        }).optional(),
+    avatarUrl: z.url().nullable().optional(),
 }).refine(data => Object.keys(data).length > 0, {
     message: "Nenhum campo para atualizar."
 })
