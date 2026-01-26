@@ -6,8 +6,13 @@ import { authRouter } from "./routes/auth.route";
 
 const app = express();
 
+const allowedOrigins = [
+    'http://localhost:5173', // dev vite
+    'http://localhost:8080', // prod nginx
+];
+
 app.use(cors({
-    origin: 'http://localhost:5173'
+    origin: allowedOrigins
 }));
 
 app.use(express.json());

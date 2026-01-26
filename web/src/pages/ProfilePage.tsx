@@ -20,7 +20,7 @@ type User = {
     updatedAt: string;
 };
 
-const API_URL = "http://localhost:3333";
+const API_URL = "http://localhost:3000";
 
 export function ProfilePage() {
     const navigate = useNavigate();

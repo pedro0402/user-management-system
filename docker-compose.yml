@@ -3,16 +3,44 @@ version: '3.8'
 services:
   db:
     image: postgres:13
+    #Usa imagem pronta do Postgres
+    #Não precisa Dockerfile
     container_name: user_management_db
     restart: always
     ports:
       - '5433:5432'
     environment:
-        POSTGRES_USER: admin
-        POSTGRES_PASSWORD: admin
-        POSTGRES_DB: user_management
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: user_management
     volumes:
       - pgdata:/var/lib/postgresql/data
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      #Docker entra na pasta server
+      #Lê o Dockerfile
+    container_name: user_management_api
+    env_file:
+      - ./server/.env
+    environment:
+      DATABASE_URL: postgres://admin:admin@db:5432/user_management
+      PORT: 3000
+    depends_on:
+      - db
+    ports:
+      - '3000:3000'
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: user_management_web
+    depends_on:
+      - server
+    ports:
+      - '8080:80'
 
 volumes:
   pgdata:
